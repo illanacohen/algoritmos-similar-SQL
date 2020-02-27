@@ -1,3 +1,8 @@
+
+#Representación de Módulos
+
+
+
 Mod Registro se representa con rgst 
 donde rgst es diccTrie(campo,valor);
 
