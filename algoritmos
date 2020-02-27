@@ -1,0 +1,229 @@
+
+Algoritmos de Base de datos
+
+(las fuciones select2 match2 y prod2 fueron implementadas para cumplir los casos de complejidad)
+
+
+
+Consultar(in base : bd, in cons: consulta) -> res : conj(registro);
+	if cons.tipo_consulta == from then
+		nombre_tabla <- *(cons.FROM);
+		res <- obtener(bd,nombre_tabla).registros();
+
+		if cons.tipo_consulta == select then
+			consultasAnt* <- *(cons.SELECT).consultaAnterior;
+			campo <- *(cons.SELECT).c1;
+			valor <- *(cons.SELECT).v;
+			if (*consultasAnt).tipo_consulta == from then
+				nombre_tabla <- *(consultasAnt.FROM);
+				res <- select2(bd, nombre_tabla, c1, v);
+			else
+				//para cubrir complejidad de select con clave de select sin clave
+				if (*consultasAnt).tipo_consulta == select then
+					anteriorActual <- (*consultasAnt.SELECT).consultaAnterior
+					if (*anteriorActual).tipo_consulta == from then
+						res <- select(select2(bd, *(anteriorActual.FROM), campo, valor);	
+					end if
+				else
+				res <- select(consultar(base,*consultasAnt), campo, valor);
+			end if
+		else
+			if cons.tipo_consulta == match then
+				consultasAnt* <- *(cons.MATCH).consultaAnterior;
+				campo1 <- *(cons.MATCH).c1;
+				campo2 <- *(cons.MATCH).c2;
+				if (*consultasAnt).tipo_consulta == prod then
+					cAnt1 <- (*consultasAnt).consultaAnterior1;
+					cAnt2 <- (*consultasAnt).consultaAnterior2;
+					if cAnt1.tipo_consulta == from and cAnt2.tipo_consulta == from then
+						nombre_t1* <- *(cAnt1.FROM);
+						nombre_t2* <- *(cAnt2.FROM);		
+						res <- match2(bd, nombre_t1, nombre_t2, campo1, campo2);
+					else
+						res <- match(consultar(base,*consultasAnt), campo1, campo2);
+			else
+				if cons.tipo_consulta == rename then
+					consultasAnt* <- *(cons.RENAME).consultaAnterior;
+					campo1 <- *(cons.RENAME).c1
+					campo2 <- *(cons.RENAME).c2
+					res <- rename(consultar(base,*consultasAnt), campo1, campo2);
+				else
+					if cons.tipo_consulta == proj then
+						consultasAnt* <- (*cons.PROJ).consultaAnterior;
+						conj <- *(cons.PROJ).C
+						res <- proj(consultar(base,*consultasAnt),conj);
+					else
+						if cons.tipo_consulta == union then
+							consultasAnt1* <- *(cons.UNION).consultaAnterior;
+							consultasAnt2* <- *(cons.UNION).consultaAnterior; 
+							res <- union(consultar(base,*consultasAnt1),consultar(base,*consultasAnt2));
+						else
+							if cons.tipo_consulta == inter then
+								consultasAnt1* <- *(cons.INTER).consultaAnterior;
+								consultasAnt2* <- *(cons.INTER).consultaAnterior; 
+								if *consultaAnt1.tipo_consulta == from and *consultaAnt2.tipo_consulta == from then
+									res <- inter2(bd,*consultasAnt1,*consultasAnt2);
+								else
+									res <- inter(consultar(base,*consultasAnt1),consultar(base,*consultasAnt2));
+								end if
+							else //es prod por defecto//
+									consultasAnt1* <- (*cons.PROD).consultaAnterior;
+									consultasAnt2* <- (*cons.PROD).consultaAnterior; 
+									res <- prod(consultar(base,*consultasAnt1),consultar(base,*consultasAnt2));
+							end if
+						end if
+					end if
+				end if
+			end if
+		end if
+	end if	
+
+
+en adelante utilizamos un iterador sobre conjuntos suponiendo que fue creado pero es un error arrastrado
+
+
+select2(in bd: base, in n: nombre_tabla, in c1: campo1, in v: valor) -> res: conj(registro)
+	t <- obtener(bd, nombre_tabla);
+	if t.clave() == c1 then
+		res <- Ag(<>,obtenerRegistrosPorClave(t,v)); 
+	end if
+
+
+select(in rs: registros, in c1: campo1, in v: valor) -> res: conj(registro)
+	for i <- 1 to i <- cardinal(rs) do	
+		if obtener(rs[i],c1) == v then
+			agregar(res,rs[i]);
+		end if
+	end for
+
+
+match(in rs: registros, in c1: campo1, c2: campo2) -> res: conj(registro)
+	for i<-1 to i <- cardinal(rs) do
+		if obtener(rs[i],c1) == obtener(rs[i],c2) then
+			agregar(res,rs[i]);
+		end if
+	end for		
+
+
+suponiendo que el conjunto es un arreglo ordenado:
+
+
+concatenar(in r1,r2: registro,in campos: conj(campo)) -> res: registro
+	for i<-1 to |campos| do
+		if !definido(r1,campos[i]) then
+			definir(r1,campos[i]);
+		else
+			C <- Ag(<>,r2);
+			campos[i] = campos[i]2;
+			definir(r1,campos[i]);
+		end if	
+	end for		
+
+
+buscarConcatenarYagregar(in t1,t2: tabla,in indices: nat, in C: conj(registro)) -> res conj(registro)
+	for i<-1 to |t1| do
+		if  definido(t2,valorClaveDeregistros[i]) then		 
+			indices.push_back(i)
+		end if;
+	end for
+	for i<-1 to indices.size() do
+		nuevoRegistro <- concatenarRegistros(t1,t2,indices[i]);
+		Ag(C,nuevoRgistro);
+	end for	
+	res <- C	
+
+concatenarRegistros(in t1,t2: tabla, in i: nat) -> res: registro
+	r1 <- (t1.registros())[i]
+	r2 <- obtenerRegistrosPorClave(t2,valorClaveDeregistros[i])
+	//le paso por copia los registros para no modificar la tabla
+    nuevoRegistro <- concatenar(r1,r2,t2.campos());
+    res <- nuevoRegistro;   
+
+match2(in bd: base, in n1, n2: nombre_tabla, in k1: campo1, in k2: campo2) -> res: conj(registro)
+	t2 <- obtener(bd, n2);
+	t1 <- obtener(bd, n1);
+	C <- conjunto(registro);
+	indices <- vector(nat);
+	if min(n1,n2) == |t1| then
+		C <- buscarConcatenarYagregar(t1,t2,indices,C);	
+	else
+		C <- buscarConcatenarYagregar(t2,t1,indices,C);
+	end if	
+	res <- C
+
+
+rename(in rs: registros, in c1: campo1, in c2: campo2)
+	for i<-1 to cardinal(rs) do
+		v <- copiar(obtener(rs[i],c1));
+		borrar(obtener(rs[i],c1));
+		definir(rs[i], c2, v);
+	end for
+
+
+proj(in rs: registros, in C: conj(campo)) -> res: conj(registro)
+	for i<-1 to cardinal(rs) do
+		nuevo : registro
+		for j<-1 to cardinal(C) do
+			definir(nuevo, C[j], obtener(rs[i],C[j]));
+		end for
+		borrar(nuevo);
+		agregar(res,nuevo)
+
+	end for			
+
+
+proj(in rs: registros, in C: conj(campo)) -> res: conj(registro)
+	for i<-1 to cardinal(rs) do
+		nuevo : registro;
+		for j<-1 to cardinal(C) do
+			definir(nuevo,C[i],obtener(rs[i],C[j]));
+		end for	
+		agregar(res,nuevo);
+		for k<-1 to cardinal(C) do
+			borrar(nuevo,C[k]);
+		end for	
+	end for	
+
+inter(in rs1: registros, in rs2: registros) -> res: conj(registro)
+	for i<-1 to cardinal(rs1) do
+		for j<-1 to cardinal(rs2) do
+			if rs1[i] <- rs2[i] the 
+				agregar(res, rs1[i])
+			end if
+		end for
+	end for
+
+
+inter2(in bd, in n1,n2: nombre_tabla) -> res: conj(registro)
+	t1 <- obtener(bd, n1); 
+	t2 <- obtener(bd, n2);
+	C <- conj(registro);
+	if |t1| < |t2| then 
+		for i<-1 to |t1| do
+			if definido(obtenerRegistrosPorClave(t1,c)) then
+				C <- agregarRapido(obtener(t1.obtenerRegistrosPorClave, t1.valorClaveDeregistros[i]))
+			end if
+		end for
+	else
+		for i<-1 to |t2| do
+			if definido(obtenerRegistrosPorClave(t2,c)) then
+				C <- agregarRapido(obtener(t2.obtenerRegistrosPorClave, t2.valorClaveDeregistros[i]))
+			end if
+		end for
+	end if
+	res <- C		
+
+
+
+prod(in rs1: registros, in rs2: registros) -> res: conj(registro)
+	nuevo : registro
+	for i<-1 to cardinal(rs1) do
+		definir(nuevo,)
+---------------------------------terminar prod
+
+
+
+union(in rs1: registros, in rs2: registros) -> res: conj(registro);		
+	for i <- 1 to 1 <- |rs1| do
+		res <- Ag(rs2, rs1[i]);
+	end for
