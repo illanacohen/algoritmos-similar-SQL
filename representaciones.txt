@@ -1,0 +1,56 @@
+Mod Registro se representa con rgst 
+donde rgst es diccTrie(campo,valor);
+
+Mod Tabla se representa con tab 
+donde tab es tupla <registros: conj(registro),  
+					registrosPorClaves: diccTrie(valor, registro),
+					valorClaveDeregistros: arreglo de valores ordenado,
+					clave: string,
+					campos: conj(campo),
+					>;
+										 
+Mod Consulta se representa con cons 
+donde cons es tupla <
+					 tipo_consulta: string,
+					 FROM: puntero(nombre_tabla),
+					 MATCH: puntero(CMatch),
+					 SELECT: puntero(CSelect),
+					 RENAME: puntero(CRename),
+					 PROJ: puntero(CProj),
+					 UNION: puntero(CUnion),
+					 INTER: puntero(CInter),
+					 PROD: puntero(CProd) >;
+
+
+					 donde 
+					  
+					 lista es una lista enlazada de tabla 
+
+					 CMatch es tupla <    consultaAnterior1: puntero(cons),			 		
+					 					  c1: campo1, valor: valor >;
+
+					 CSelect es tupla <   consultaAnterior1: puntero(cons),
+					 					  c1: campo1, v: valor>;
+
+					 CRename es tupla <   consultaAnterior1: puntero(cons),
+					 					  c1: campo1, c2: campo2>;					  
+
+					 CProj es tupla <	  consultaAnterior1: puntero(cons),
+					 					  C: conjunto(campo) >;
+
+					 CUnion es tupla <    consultaAnterior1: puntero(cons),
+					 					  consultaAnterior2: puntero(cons) >;
+
+					 CInter es tupla <    consultaAnterior1: puntero(cons),
+					 					  consultaAnterior2: puntero(cons) >;
+
+					 CProd es tupla <	  consultaAnterior1: puntero(cons),
+					 					  consultaAnterior2: puntero(cons) >;
+
+
+mod Base de tabla se representa con base
+donde base es tupla <diccTrie(nombre_tabla,tabla)>
+
+
+
+
