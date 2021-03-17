@@ -1,7 +1,7 @@
 # Representación de Módulos y Algoritmos de Consultas sobre Bases de Datos
 Trabajo práctico sobre Consultas / Bases de Datos. Instancia: Diseño
 
-Los algoritmos fueron pensados para implementarse en C++.
+Los algoritmos fueron pensados para ser implementados en C++.
 
 El algoritmo Consultar funciona por recursión desglozando las consultas enlazadas que ingresan como argumento junto a una base de datos.
 
